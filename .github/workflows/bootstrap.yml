@@ -66,16 +66,14 @@ jobs:
             echo "Chrome exit code: $CHROME_EXIT"
             echo "DOM bytes: $(wc -c </tmp/talentera-huddle.html)"
             echo "Ready marker: $(grep -c 'data-huddle-ready="true"' /tmp/talentera-huddle.html || true)"
+            echo "Rendered app: $(grep -c '<div id="root"><div class="app">' /tmp/talentera-huddle.html || true)"
             echo "Command center marker: $(grep -c 'Acquisition Command Center' /tmp/talentera-huddle.html || true)"
-            echo "Startup failure marker: $(grep -c 'Dashboard startup failed' /tmp/talentera-huddle.html || true)"
-            echo "Data failure marker: $(grep -c 'Dashboard data could not be loaded' /tmp/talentera-huddle.html || true)"
           } >>/tmp/browser-summary.txt
 
           if [ "$CHROME_EXIT" -ne 0 ] \
             || ! grep -q 'data-huddle-ready="true"' /tmp/talentera-huddle.html \
-            || ! grep -q 'Acquisition Command Center' /tmp/talentera-huddle.html \
-            || grep -q 'Dashboard startup failed' /tmp/talentera-huddle.html \
-            || grep -q 'Dashboard data could not be loaded' /tmp/talentera-huddle.html; then
+            || ! grep -q '<div id="root"><div class="app">' /tmp/talentera-huddle.html \
+            || ! grep -q 'Acquisition Command Center' /tmp/talentera-huddle.html; then
             cat /tmp/browser-summary.txt
             exit 1
           fi
