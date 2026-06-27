@@ -31,21 +31,47 @@ jobs:
             "https://czaxtwbmborxwzaboqxl.supabase.co/functions/v1/acquisition-huddle?ci=${GITHUB_SHA}" \
             | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('meta',{}).get('dataSource') == 'Supabase'; assert isinstance(d.get('repData'), list) and len(d['repData']) > 0"
 
-      - name: Open live dashboard in headless Chrome
+      - name: Open dashboard in headless Chrome
         run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 >/tmp/huddle-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent http://127.0.0.1:4173/index.html >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
           test -n "$CHROME"
+
+          set +e
           "$CHROME" \
             --headless=new \
             --no-sandbox \
             --disable-gpu \
-            --virtual-time-budget=40000 \
+            --disable-dev-shm-usage \
+            --virtual-time-budget=60000 \
             --dump-dom \
-            "https://raw.githack.com/amohamed-alt/Supabase-Project/main/index.html?ci=${GITHUB_SHA}" \
-            > /tmp/talentera-huddle.html
-          grep -q "Acquisition Command Center" /tmp/talentera-huddle.html
-          grep -q "Live · HubSpot" /tmp/talentera-huddle.html
-          if grep -q "Dashboard data could not be loaded" /tmp/talentera-huddle.html; then
-            cat /tmp/talentera-huddle.html
+            "http://127.0.0.1:4173/index.html?ci=${GITHUB_SHA}" \
+            >/tmp/talentera-huddle.html \
+            2>/tmp/chrome.log
+          CHROME_EXIT=$?
+          set -e
+
+          if [ "$CHROME_EXIT" -ne 0 ] \
+            || ! grep -q 'data-huddle-ready="true"' /tmp/talentera-huddle.html \
+            || ! grep -q 'Acquisition Command Center' /tmp/talentera-huddle.html \
+            || grep -q 'Dashboard startup failed' /tmp/talentera-huddle.html \
+            || grep -q 'Dashboard data could not be loaded' /tmp/talentera-huddle.html; then
+            echo "Chrome exit code: $CHROME_EXIT"
+            echo "--- Chrome log ---"
+            cat /tmp/chrome.log || true
+            echo "--- Server log ---"
+            cat /tmp/huddle-server.log || true
+            echo "--- Rendered DOM ---"
+            cat /tmp/talentera-huddle.html || true
             exit 1
           fi
