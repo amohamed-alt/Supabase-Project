@@ -45,6 +45,7 @@ jobs:
           done
 
           CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "Chrome binary: ${CHROME:-not-found}" >/tmp/browser-summary.txt
           test -n "$CHROME"
 
           set +e
@@ -61,17 +62,33 @@ jobs:
           CHROME_EXIT=$?
           set -e
 
+          {
+            echo "Chrome exit code: $CHROME_EXIT"
+            echo "DOM bytes: $(wc -c </tmp/talentera-huddle.html)"
+            echo "Ready marker: $(grep -c 'data-huddle-ready="true"' /tmp/talentera-huddle.html || true)"
+            echo "Command center marker: $(grep -c 'Acquisition Command Center' /tmp/talentera-huddle.html || true)"
+            echo "Startup failure marker: $(grep -c 'Dashboard startup failed' /tmp/talentera-huddle.html || true)"
+            echo "Data failure marker: $(grep -c 'Dashboard data could not be loaded' /tmp/talentera-huddle.html || true)"
+          } >>/tmp/browser-summary.txt
+
           if [ "$CHROME_EXIT" -ne 0 ] \
             || ! grep -q 'data-huddle-ready="true"' /tmp/talentera-huddle.html \
             || ! grep -q 'Acquisition Command Center' /tmp/talentera-huddle.html \
             || grep -q 'Dashboard startup failed' /tmp/talentera-huddle.html \
             || grep -q 'Dashboard data could not be loaded' /tmp/talentera-huddle.html; then
-            echo "Chrome exit code: $CHROME_EXIT"
-            echo "--- Chrome log ---"
-            cat /tmp/chrome.log || true
-            echo "--- Server log ---"
-            cat /tmp/huddle-server.log || true
-            echo "--- Rendered DOM ---"
-            cat /tmp/talentera-huddle.html || true
+            cat /tmp/browser-summary.txt
             exit 1
           fi
+
+      - name: Upload browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: huddle-browser-diagnostics
+          if-no-files-found: warn
+          retention-days: 2
+          path: |
+            /tmp/browser-summary.txt
+            /tmp/chrome.log
+            /tmp/huddle-server.log
+            /tmp/talentera-huddle.html
