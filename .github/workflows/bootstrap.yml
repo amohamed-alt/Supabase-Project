@@ -1,0 +1,146 @@
+name: Bootstrap Talentera Huddle
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/bootstrap.yml]
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy Talentera Huddle
+        run: |
+          git clone --depth 1 https://github.com/amohamed-alt/talentera-huddle.git /tmp/talentera-huddle
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+          rsync -a --exclude=.git --exclude=.github --exclude=data.json /tmp/talentera-huddle/ ./
+
+      - name: Add Supabase data adapter
+        run: |
+          mkdir -p react-preview
+          cat > react-preview/supabase-adapter.js <<'EOF'
+          (() => {
+            const ENDPOINT = 'https://czaxtwbmborxwzaboqxl.supabase.co/functions/v1/acquisition-huddle';
+            const nativeFetch = window.fetch.bind(window);
+            const TTL = 15000;
+            let cached = null;
+            let cachedAt = 0;
+            let pending = null;
+
+            async function load(force = false) {
+              if (!force && cached && Date.now() - cachedAt < TTL) return cached;
+              if (!force && pending) return pending;
+              pending = nativeFetch(`${ENDPOINT}?t=${Date.now()}`, { cache: 'no-store' })
+                .then(async response => {
+                  if (!response.ok) throw new Error(`Supabase data request failed (${response.status})`);
+                  const payload = await response.json();
+                  if (payload?.error) throw new Error(payload.error);
+                  cached = payload;
+                  cachedAt = Date.now();
+                  return payload;
+                })
+                .finally(() => { pending = null; });
+              return pending;
+            }
+
+            window.TalenteraSupabase = { endpoint: ENDPOINT, refresh: () => load(true) };
+            window.fetch = async (input, init = {}) => {
+              const url = typeof input === 'string' ? input : input?.url || '';
+              if (/(^|\/)data\.json(?:[?#]|$)/i.test(url)) {
+                const force = /[?&](?:t|dealMovement|rankCoverage)=/i.test(url) && Date.now() - cachedAt >= TTL;
+                const data = await load(force);
+                return new Response(JSON.stringify(data), {
+                  status: 200,
+                  headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'X-Data-Source': 'Supabase'
+                  }
+                });
+              }
+              return nativeFetch(input, init);
+            };
+          })();
+          EOF
+
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+          marker = '  <script src="./react-preview/json-fetch-sanitizer.js?v=1"></script>'
+          adapter = '  <script src="./react-preview/supabase-adapter.js?v=1"></script>\n'
+          if adapter.strip() not in text:
+              if marker not in text:
+                  raise SystemExit('Could not find dashboard script marker')
+              text = text.replace(marker, adapter + marker)
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Add deployment and documentation
+        run: |
+          cat > .github/workflows/deploy-pages.yml <<'EOF'
+          name: Deploy GitHub Pages
+
+          on:
+            push:
+              branches: [main]
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+            pages: write
+            id-token: write
+
+          concurrency:
+            group: pages
+            cancel-in-progress: true
+
+          jobs:
+            deploy:
+              environment:
+                name: github-pages
+                url: ${{ steps.deployment.outputs.page_url }}
+              runs-on: ubuntu-latest
+              steps:
+                - uses: actions/checkout@v4
+                - uses: actions/configure-pages@v5
+                  with:
+                    enablement: true
+                - uses: actions/upload-pages-artifact@v3
+                  with:
+                    path: .
+                - id: deployment
+                  uses: actions/deploy-pages@v4
+          EOF
+
+          cat > README.md <<'EOF'
+          # Talentera Huddle — Supabase Edition
+
+          This repository preserves the approved Talentera Huddle interface while replacing the large static `data.json` snapshot with live curated data from Supabase.
+
+          ## Architecture
+
+          - Frontend: existing static React/Chart.js Talentera Huddle UI.
+          - Data API: Supabase Edge Function `acquisition-huddle`.
+          - Source data: synced HubSpot tables and acquisition cache tables in Supabase.
+          - Security: the browser receives a curated dashboard payload only; raw HubSpot tables, email addresses, phone numbers, and service credentials are not exposed.
+          - Hosting: GitHub Pages via `.github/workflows/deploy-pages.yml`.
+
+          ## Data flow
+
+          The `react-preview/supabase-adapter.js` file intercepts legacy `data.json` requests and replaces them with the Supabase Edge Function response. This keeps the existing dashboard components and interactions unchanged.
+          EOF
+
+      - name: Commit generated application
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add -A
+          git commit -m "Bootstrap Talentera Huddle with Supabase data"
+          git push
