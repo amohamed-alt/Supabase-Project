@@ -30,3 +30,22 @@ jobs:
             --max-time 60 \
             "https://czaxtwbmborxwzaboqxl.supabase.co/functions/v1/acquisition-huddle?ci=${GITHUB_SHA}" \
             | python3 -c "import json,sys; d=json.load(sys.stdin); assert d.get('meta',{}).get('dataSource') == 'Supabase'; assert isinstance(d.get('repData'), list) and len(d['repData']) > 0"
+
+      - name: Open live dashboard in headless Chrome
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          "$CHROME" \
+            --headless=new \
+            --no-sandbox \
+            --disable-gpu \
+            --virtual-time-budget=40000 \
+            --dump-dom \
+            "https://raw.githack.com/amohamed-alt/Supabase-Project/main/index.html?ci=${GITHUB_SHA}" \
+            > /tmp/talentera-huddle.html
+          grep -q "Acquisition Command Center" /tmp/talentera-huddle.html
+          grep -q "Live · HubSpot" /tmp/talentera-huddle.html
+          if grep -q "Dashboard data could not be loaded" /tmp/talentera-huddle.html; then
+            cat /tmp/talentera-huddle.html
+            exit 1
+          fi
