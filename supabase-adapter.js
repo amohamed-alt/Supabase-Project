@@ -100,8 +100,8 @@
     };
     payload.meta = { ...(payload.meta || {}), yesterdayLabel: lastBusinessDayLabel(),
       dataSource: 'Supabase · corrected cached acquisition data' };
-    payload.diagnostics = { ...(payload.diagnostics || {}), adapterVersion: '4.0', acquisitionOnly: true,
-      rankMeetingRowsRestored: true, persistentCache: true };
+    payload.diagnostics = { ...(payload.diagnostics || {}), adapterVersion: '4.1', acquisitionOnly: true,
+      rankMeetingRowsRestored: true, persistentCache: true, taskWorkspace: true };
     return payload;
   }
 
@@ -132,7 +132,25 @@
     return fetchFresh();
   }
 
+  function loadTaskWorkspace() {
+    if (!document.querySelector('link[data-talentera-tasks]')) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = './task-workspace-v1.css?v=1';
+      link.dataset.talenteraTasks = 'true';
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('script[data-talentera-tasks]')) {
+      const script = document.createElement('script');
+      script.src = './task-workspace-v1.js?v=1';
+      script.defer = true;
+      script.dataset.talenteraTasks = 'true';
+      document.head.appendChild(script);
+    }
+  }
+
   restorePersistentCache();
+  loadTaskWorkspace();
 
   window.TalenteraSupabase = Object.freeze({
     endpoint: ENDPOINT,
