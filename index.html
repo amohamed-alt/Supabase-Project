@@ -8,6 +8,10 @@
   <title>Talentera Huddle · Supabase Command Center</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://amohamed-alt.github.io" crossorigin />
+  <link rel="preconnect" href="https://czaxtwbmborxwzaboqxl.supabase.co" crossorigin />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://amohamed-alt.github.io/talentera-huddle/react-preview/styles-v6.css?v=7" />
   <link rel="stylesheet" href="https://amohamed-alt.github.io/talentera-huddle/react-preview/styles-v6-fixes.css?v=7" />
@@ -21,7 +25,7 @@
 </head>
 <body>
   <div id="root"><div style="min-height:100vh;display:grid;place-items:center;font:500 14px Inter,sans-serif;color:#53635b">Loading Talentera Huddle…</div></div>
-  <script src="./supabase-adapter.js?v=3"></script>
+  <script src="./supabase-adapter.js?v=4"></script>
   <script src="https://amohamed-alt.github.io/talentera-huddle/react-preview/json-fetch-sanitizer.js?v=1"></script>
   <script>
     (() => {
@@ -36,18 +40,13 @@
       ];
 
       async function fetchText(url) {
-        const response = await fetch(url, { cache: 'no-store' });
+        const response = await fetch(url, { cache: 'force-cache' });
         if (!response.ok) throw new Error(`${url} returned HTTP ${response.status}`);
         return response.text();
       }
 
-      async function executeJsx(url) {
-        const source = await fetchText(url);
-        const transformed = Babel.transform(source, {
-          presets: ['react'],
-          sourceType: 'script',
-          filename: url
-        }).code;
+      function executeJsxSource(source, url) {
+        const transformed = Babel.transform(source, { presets: ['react'], sourceType: 'script', filename: url }).code;
         const script = document.createElement('script');
         script.textContent = `${transformed}\n//# sourceURL=${url}`;
         document.body.appendChild(script);
@@ -66,24 +65,17 @@
       }
 
       async function start() {
-        if (!window.React || !window.ReactDOM || !window.Chart || !window.Babel) {
-          throw new Error('A required dashboard runtime library did not load.');
-        }
-        for (const url of JSX_ASSETS) await executeJsx(url);
-        for (const url of SCRIPT_ASSETS) await loadScript(url);
+        if (!window.React || !window.ReactDOM || !window.Chart || !window.Babel) throw new Error('A required dashboard runtime library did not load.');
+        const jsxSources = await Promise.all(JSX_ASSETS.map(fetchText));
+        jsxSources.forEach((source, index) => executeJsxSource(source, JSX_ASSETS[index]));
+        await Promise.all(SCRIPT_ASSETS.map(loadScript));
         document.documentElement.dataset.huddleReady = 'true';
       }
 
       start().catch(error => {
         console.error('Talentera Huddle startup failed:', error);
         document.documentElement.dataset.huddleReady = 'false';
-        document.getElementById('root').innerHTML = `
-          <div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f2f5f3;font-family:Inter,sans-serif">
-            <div style="max-width:680px;padding:24px;border:1px solid #e4ebe7;border-radius:14px;background:#fff;color:#1b2821;box-shadow:0 8px 25px rgba(31,58,45,.055)">
-              <strong style="display:block;font-size:18px">Dashboard startup failed</strong>
-              <p style="margin:10px 0 0;color:#53635b;word-break:break-word">${String(error.message || error)}</p>
-            </div>
-          </div>`;
+        document.getElementById('root').innerHTML = `<div style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f2f5f3;font-family:Inter,sans-serif"><div style="max-width:680px;padding:24px;border:1px solid #e4ebe7;border-radius:14px;background:#fff;color:#1b2821"><strong style="display:block;font-size:18px">Dashboard startup failed</strong><p style="margin:10px 0 0;color:#53635b;word-break:break-word">${String(error.message || error)}</p></div></div>`;
       });
     })();
   </script>
