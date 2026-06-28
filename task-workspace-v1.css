@@ -1,0 +1,42 @@
+.task-workspace-card{overflow:hidden}
+.task-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}
+.task-workspace-head>div{display:flex;align-items:center;gap:12px}
+.task-workspace-head i{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#e9f8f1,#dff2ff);display:grid;place-items:center;color:#11895b;font-style:normal;font-weight:800;font-size:18px}
+.task-workspace-head h3{margin:0;font-size:17px;color:#1c2b23}
+.task-workspace-head p{margin:4px 0 0;color:#6d7c74;font-size:12px}
+.task-live{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce9e2;background:#f6fbf8;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:700;color:#3c5d4b}
+.task-live b{width:7px;height:7px;border-radius:50%;background:#13a466;box-shadow:0 0 0 4px rgba(19,164,102,.12)}
+.task-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.task-kpi{appearance:none;border:1px solid #e4ebe7;background:#fff;border-radius:13px;padding:14px 13px;text-align:left;cursor:pointer;transition:.18s ease;min-width:0}
+.task-kpi:hover,.task-kpi.active{transform:translateY(-1px);box-shadow:0 10px 24px rgba(26,61,43,.08);border-color:#bcd7c9}
+.task-kpi strong{display:block;font-size:25px;line-height:1;color:#203029;margin-bottom:8px}
+.task-kpi span{display:block;font-size:12px;font-weight:750;color:#26382f}
+.task-kpi small{display:block;margin-top:5px;font-size:10px;line-height:1.35;color:#7b8982}
+.task-kpi.red strong{color:#d7443e}.task-kpi.green strong{color:#11935f}.task-kpi.blue strong{color:#3272dc}.task-kpi.purple strong{color:#7355cc}.task-kpi.amber strong{color:#cb7d0c}.task-kpi.slate strong{color:#4d6257}
+.task-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px}
+.task-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.task-tabs button,.task-view-all{border:1px solid #e0e9e4;background:#f8fbf9;border-radius:9px;padding:7px 10px;font-size:11px;font-weight:700;color:#52645a;cursor:pointer}
+.task-tabs button.active{background:#163e2d;color:#fff;border-color:#163e2d}
+.task-view-all{background:#fff;color:#11895b}
+.task-table-wrap,.task-score-table{overflow:auto;border:1px solid #e7ede9;border-radius:12px}
+.task-table,.task-score-table table{width:100%;border-collapse:collapse;min-width:760px}
+.task-table th,.task-table td,.task-score-table th,.task-score-table td{padding:11px 12px;border-bottom:1px solid #eef2ef;text-align:left;font-size:11px;color:#42544a}
+.task-table th,.task-score-table th{background:#f7faf8;color:#748178;font-size:10px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;z-index:1}
+.task-table tr:last-child td,.task-score-table tr:last-child td{border-bottom:0}
+.task-name>a{font-weight:750;color:#183c2c;text-decoration:none}
+.task-name small{display:flex;align-items:center;gap:8px;margin-top:5px;color:#79877f}
+.task-related{color:#537265;text-decoration:none}.task-related:hover{color:#11935f}
+.task-owner{border-left:1px solid #dfe7e2;padding-left:8px}.muted{color:#8b9690}
+.task-chip{display:inline-flex;align-items:center;border-radius:999px;padding:4px 7px;font-size:9px;font-weight:800;letter-spacing:.02em;background:#edf2ef;color:#55655d;white-space:nowrap}
+.task-chip.success{background:#e7f7ef;color:#0c8654}.task-chip.danger{background:#fdecea;color:#c63d36}.task-chip.warning{background:#fff3de;color:#b66e07}.task-chip.info{background:#eaf2ff;color:#356fc5}.task-chip.neutral{background:#eff2f0;color:#68746d}.task-chip.type{background:#eeeafb;color:#654cb6}
+.task-empty{padding:22px;text-align:center;color:#738078;font-size:12px}
+.task-scoreboard{margin-top:20px}.task-subhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}.task-subhead h4{margin:0;color:#24352c;font-size:13px}.task-subhead p{margin:4px 0 0;color:#7b8981;font-size:10px}
+.task-score-table tr[data-rep-link]{cursor:pointer}.task-score-table tr[data-rep-link]:hover td{background:#f5faf7}.task-score-table button{border:0;background:transparent;padding:0;color:#183c2c;font-weight:750;cursor:pointer}.task-score-table td.bad{color:#d7443e;font-weight:800}.task-rate{display:inline-flex;padding:4px 7px;border-radius:999px;background:#e8f7ef;color:#11895b;font-weight:800}
+.task-footnote{margin-top:12px;font-size:10px;color:#849087}
+.task-modal-bg{position:fixed;inset:0;background:rgba(12,26,19,.52);backdrop-filter:blur(5px);z-index:99999;display:grid;place-items:center;padding:22px}
+.task-modal{width:min(920px,96vw);max-height:88vh;background:#fff;border-radius:18px;box-shadow:0 30px 90px rgba(0,0,0,.22);overflow:hidden;display:flex;flex-direction:column}
+.task-modal-head{padding:18px 20px;border-bottom:1px solid #e7ede9;display:flex;justify-content:space-between;align-items:center}.task-modal-head h2{margin:0;font-size:18px;color:#1d2c24}.task-modal-head p{margin:5px 0 0;color:#758179;font-size:11px}.task-modal-head button{border:0;background:#f0f4f2;width:34px;height:34px;border-radius:10px;font-size:22px;color:#40534a;cursor:pointer}
+.task-modal-body{overflow:auto;padding:12px}.task-modal-row{display:flex;justify-content:space-between;gap:16px;padding:14px;border:1px solid #e8eeea;border-radius:12px;margin-bottom:9px}.task-modal-row>div{min-width:0}.task-modal-row a{font-weight:800;color:#183c2c;text-decoration:none}.task-modal-row p{margin:6px 0;color:#66756d;font-size:11px;white-space:pre-wrap}.task-modal-row small{color:#89938e;font-size:10px}.task-modal-row aside{display:flex;align-items:flex-end;flex-direction:column;gap:7px;min-width:160px}.task-modal-row aside b{font-size:10px;color:#526158}.task-workspace-card .card-head{display:none}
+@media(max-width:1180px){.task-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.task-workspace-head{align-items:flex-start;flex-direction:column}.task-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.task-toolbar{align-items:flex-start;flex-direction:column}.task-modal-row{flex-direction:column}.task-modal-row aside{align-items:flex-start;min-width:0}.task-live{align-self:flex-start}}
+@media(max-width:440px){.task-kpis{grid-template-columns:1fr}}
